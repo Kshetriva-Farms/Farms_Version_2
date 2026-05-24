@@ -1,12 +1,28 @@
-// Mock Products Data
-const products = [
+// Firebase configuration keys (Placeholders until user replaces them in the Firebase console)
+const firebaseConfig = {
+    apiKey: "AIzaSyC4rquVj5Ug2ZdsDci7zHucEUXXVtaCPcI",
+    authDomain: "kshetriva-farms.firebaseapp.com",
+    projectId: "kshetriva-farms",
+    storageBucket: "kshetriva-farms.firebasestorage.app",
+    messagingSenderId: "332889493996",
+    appId: "1:332889493996:web:945cbd393438dc3aa9b0c9"
+};
+
+// Global Firebase Instance State
+let db = null;
+let auth = null;
+let useFirebase = false;
+
+// Mock / Initial Products Data (Acts as default catalog and local fallback db)
+let products = [
     {
         id: 1,
         name: "Fresh Spinach (Palak)",
         category: "leafy",
         price: "₹40",
         unit: "bunch",
-        image: "images/spinach.webp"
+        image: "images/spinach.webp",
+        inStock: true
     },
     {
         id: 2,
@@ -14,7 +30,8 @@ const products = [
         category: "root",
         price: "₹60",
         unit: "kg",
-        image: "images/carrots.webp"
+        image: "images/carrots.webp",
+        inStock: true
     },
     {
         id: 3,
@@ -22,7 +39,8 @@ const products = [
         category: "organic",
         price: "₹50",
         unit: "kg",
-        image: "images/tomatoes.webp"
+        image: "images/tomatoes.webp",
+        inStock: true
     },
     {
         id: 4,
@@ -30,7 +48,8 @@ const products = [
         category: "fruits",
         price: "₹400",
         unit: "dozen",
-        image: "images/mangoes.webp"
+        image: "images/mangoes.webp",
+        inStock: true
     },
     {
         id: 5,
@@ -38,7 +57,8 @@ const products = [
         category: "leafy",
         price: "₹30",
         unit: "pc",
-        image: "images/cabbage.webp"
+        image: "images/cabbage.webp",
+        inStock: true
     },
     {
         id: 6,
@@ -46,7 +66,8 @@ const products = [
         category: "root",
         price: "₹30",
         unit: "kg",
-        image: "images/potatoes.webp"
+        image: "images/potatoes.webp",
+        inStock: true
     },
     {
         id: 7,
@@ -54,7 +75,8 @@ const products = [
         category: "leafy",
         price: "₹20",
         unit: "bunch",
-        image: "images/coriander.webp"
+        image: "images/coriander.webp",
+        inStock: true
     },
     {
         id: 8,
@@ -62,7 +84,8 @@ const products = [
         category: "organic",
         price: "₹60",
         unit: "kg",
-        image: "images/lady_finger.webp"
+        image: "images/lady_finger.webp",
+        inStock: true
     },
     {
         id: 9,
@@ -70,9 +93,34 @@ const products = [
         category: "organic",
         price: "₹40",
         unit: "pc",
-        image: "images/bottle_gourd.webp"
+        image: "images/bottle_gourd.webp",
+        inStock: true
     }
 ];
+
+// Initialize Firebase dynamically
+try {
+    if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+        useFirebase = true;
+        console.log("🌾 Kshetriva Farms: Live Firebase Backend Connected successfully.");
+    } else {
+        console.log("🌾 Kshetriva Farms: Running in Local Fallback Database mode. Setup Firebase credentials to sync live online.");
+        // Load offline client catalog from LocalStorage if present
+        const offlineCatalog = localStorage.getItem('kshetriva_catalog');
+        if (offlineCatalog) {
+            try {
+                products = JSON.parse(offlineCatalog);
+            } catch (e) {
+                console.error("Failed to parse offline localStorage catalog:", e);
+            }
+        }
+    }
+} catch (e) {
+    console.error("🌾 Kshetriva Farms: Backend connection exception:", e);
+}
 
 const productGrid = document.getElementById('productGrid');
 
@@ -156,7 +204,7 @@ const translations = {
         confirmModalDesc: "Are you sure you want to clear all products from your basket?",
         confirmModalCancel: "Cancel",
         confirmModalAccept: "Clear All",
-        
+
         spinachName: "Fresh Spinach (Palak)",
         carrotsName: "Organic Carrots",
         tomatoesName: "Red Tomatoes",
@@ -166,16 +214,18 @@ const translations = {
         corianderName: "Fresh Coriander (Kothmir)",
         ladyfingerName: "Fresh Lady Finger (Bhindi)",
         bottlegourdName: "Fresh Bottle Gourd (Lauki)",
-        
+
         unitBunch: "bunch",
         unitKg: "kg",
         unitPc: "pc",
         unitDozen: "dozen",
-        
+
         btnAddToBasket: "Add to Basket",
         btnAdded: "✓ Added!",
         btnReset: "✓ Reset!",
-        emailCopied: " Email copied to clipboard!"
+        emailCopied: " Email copied to clipboard!",
+        outOfStock: "Out of Stock",
+        btnOutOfStock: "Out of Stock"
     },
     te: {
         logoText: "క్షేత్రీవ ఫార్మ్స్",
@@ -255,7 +305,7 @@ const translations = {
         confirmModalDesc: "మీ బాస్కెట్ నుండి అన్ని ఉత్పత్తులను తొలగించాలనుకుంటున్నారా?",
         confirmModalCancel: "రద్దు చేయి",
         confirmModalAccept: "అన్నీ తీసివేయి",
-        
+
         spinachName: "తాజా పాలకూర (పాలక్)",
         carrotsName: "ఆర్గానిక్ క్యారెట్లు",
         tomatoesName: "ఎర్రటి టమోటాలు",
@@ -265,16 +315,18 @@ const translations = {
         corianderName: "తాజా కొత్తిమీర",
         ladyfingerName: "తాజా బెండకాయలు (భిండి)",
         bottlegourdName: "తాజా ఆనపకాయ/సొరకాయ (లౌకి)",
-        
+
         unitBunch: "కట్ట",
         unitKg: "కిలో",
         unitPc: "ముక్క / కాయ",
         unitDozen: "డజను",
-        
+
         btnAddToBasket: "బాస్కెట్‌కు జోడించు",
         btnAdded: "✓ జోడించబడింది!",
         btnReset: "✓ రీసెట్!",
-        emailCopied: " ఈమెయిల్ క్లిప్‌బోర్డ్‌కు కాపీ చేయబడింది!"
+        emailCopied: " ఈమెయిల్ క్లిప్‌బోర్డ్‌కు కాపీ చేయబడింది!",
+        outOfStock: "స్టాక్ లేదు",
+        btnOutOfStock: "స్టాక్ లేదు"
     }
 };
 
@@ -282,7 +334,7 @@ let currentLang = localStorage.getItem('kshetriva_lang') || 'en';
 
 function applyLanguage() {
     const dict = translations[currentLang];
-    
+
     // 1. Update Lang Selector sliding toggle states
     const langToggle = document.getElementById('langToggle');
     const langOptEn = document.getElementById('langOptEn');
@@ -298,18 +350,18 @@ function applyLanguage() {
             langOptEn.classList.add('active');
         }
     }
-    
+
     // Fallback: support older cached HTML button langBtn
     const langText = document.getElementById('langText');
     if (langText) {
         langText.textContent = currentLang === 'en' ? 'TE' : 'EN';
     }
-    
+
     // 2. Translate Static Elements
-    
+
     // Logo
     document.querySelectorAll('.logo span').forEach(el => el.textContent = dict.logoText);
-    
+
     // Nav Links
     const homeLink = document.querySelector('.nav-links a[href="#home"]');
     if (homeLink) homeLink.textContent = dict.navHome;
@@ -325,7 +377,7 @@ function applyLanguage() {
     if (galleryLink) galleryLink.textContent = dict.navGallery;
     const reviewsLink = document.querySelector('.nav-links a[href="#reviews"]');
     if (reviewsLink) reviewsLink.textContent = dict.navReviews;
-    
+
     // Hero
     const heroTitle = document.querySelector('.hero-content h1');
     if (heroTitle) heroTitle.textContent = dict.heroTitle;
@@ -339,11 +391,11 @@ function applyLanguage() {
     if (heroWhatsapp) {
         heroWhatsapp.innerHTML = `<i class="fa-brands fa-whatsapp"></i> ${dict.heroWhatsappBtn}`;
     }
-    
+
     // About
     const aboutHeader = document.querySelector('.about-text h3');
     if (aboutHeader) aboutHeader.textContent = dict.aboutTitle;
-    
+
     const aboutPs = document.querySelectorAll('.about-text p');
     if (aboutPs.length >= 4) {
         aboutPs[0].innerHTML = `<strong>${dict.aboutP1Bold}</strong>${dict.aboutP1Text}`;
@@ -351,13 +403,13 @@ function applyLanguage() {
         aboutPs[2].innerHTML = `<strong>${dict.aboutP3Bold}</strong>${dict.aboutP3Text}`;
         aboutPs[3].innerHTML = `<strong>${dict.aboutP4Bold}</strong>${dict.aboutP4Text}`;
     }
-    
+
     // How It Works
     const howHeader = document.querySelector('.how-it-works .section-title');
     if (howHeader) howHeader.textContent = dict.howTitle;
     const howSubtitle = document.querySelector('.how-it-works .section-subtitle');
     if (howSubtitle) howSubtitle.textContent = dict.howSubtitle;
-    
+
     const steps = document.querySelectorAll('.step');
     if (steps.length >= 4) {
         steps[0].querySelector('h4').textContent = dict.step1Title;
@@ -369,13 +421,13 @@ function applyLanguage() {
         steps[3].querySelector('h4').textContent = dict.step4Title;
         steps[3].querySelector('p').textContent = dict.step4Text;
     }
-    
+
     // Products Titles
     const pTitle = document.querySelector('.products .section-title');
     if (pTitle) pTitle.textContent = dict.productsTitle;
     const pSubtitle = document.querySelector('.products .section-subtitle');
     if (pSubtitle) pSubtitle.textContent = dict.productsSubtitle;
-    
+
     // Category Filters
     const filterBtnsEl = document.querySelectorAll('.category-filter .filter-btn');
     if (filterBtnsEl.length >= 6) {
@@ -386,32 +438,32 @@ function applyLanguage() {
         filterBtnsEl[4].textContent = dict.filterOrganic;
         filterBtnsEl[5].textContent = dict.filterFruits;
     }
-    
+
     // Farmers Titles
     const fTitle = document.querySelector('.farmers .section-title');
     if (fTitle) fTitle.textContent = dict.farmersTitle;
     const fSubtitle = document.querySelector('.farmers .section-subtitle');
     if (fSubtitle) fSubtitle.textContent = dict.farmersSubtitle;
-    
+
     // Farmers Cards
     const farmerCards = document.querySelectorAll('.farmer-card');
     if (farmerCards.length >= 3) {
         farmerCards[0].querySelector('h4').textContent = dict.farmer1Name;
         farmerCards[0].querySelector('.farmer-story').textContent = dict.farmer1Story;
-        
+
         farmerCards[1].querySelector('h4').textContent = dict.farmer2Name;
         farmerCards[1].querySelector('.farmer-story').textContent = dict.farmer2Story;
-        
+
         farmerCards[2].querySelector('h4').textContent = dict.farmer3Name;
         farmerCards[2].querySelector('.farmer-story').textContent = dict.farmer3Story;
     }
-    
+
     // Gallery Section
     const gTitle = document.querySelector('.gallery .section-title');
     if (gTitle) gTitle.textContent = dict.galleryTitle;
     const gSubtitle = document.querySelector('.gallery .section-subtitle');
     if (gSubtitle) gSubtitle.textContent = dict.gallerySubtitle;
-    
+
     const galleryItems = document.querySelectorAll('.gallery-item');
     if (galleryItems.length >= 4) {
         galleryItems[0].querySelector('.gallery-overlay h4').textContent = dict.galleryItem1;
@@ -419,69 +471,69 @@ function applyLanguage() {
         galleryItems[2].querySelector('.gallery-overlay h4').textContent = dict.galleryItem3;
         galleryItems[3].querySelector('.gallery-overlay h4').textContent = dict.galleryItem4;
     }
-    
+
     // Reviews Section
     const rTitle = document.querySelector('.reviews .section-title');
     if (rTitle) rTitle.textContent = dict.reviewsTitle;
     const rSubtitle = document.querySelector('.reviews .section-subtitle');
     if (rSubtitle) rSubtitle.textContent = dict.reviewsSubtitle;
-    
+
     const reviewCards = document.querySelectorAll('.review-card');
     if (reviewCards.length >= 3) {
         reviewCards[0].querySelector('.review-header-name h4').textContent = dict.review1Name;
         reviewCards[0].querySelector('p').textContent = dict.review1Text;
-        
+
         reviewCards[1].querySelector('.review-header-name h4').textContent = dict.review2Name;
         reviewCards[1].querySelector('p').textContent = dict.review2Text;
-        
+
         reviewCards[2].querySelector('.review-header-name h4').textContent = dict.review3Name;
         reviewCards[2].querySelector('p').textContent = dict.review3Text;
     }
-    
+
     // Footer Section
     const footerDesc = document.querySelector('footer .footer-col:nth-child(1) p');
     if (footerDesc) footerDesc.textContent = dict.footerDesc;
-    
+
     const footerHeaders = document.querySelectorAll('footer .footer-col h4');
     if (footerHeaders.length >= 3) {
         footerHeaders[0].textContent = dict.footerLinks;
         footerHeaders[1].textContent = dict.footerContact;
         footerHeaders[2].textContent = dict.footerFollow;
     }
-    
-    const footerCopyright = document.querySelector('.footer-bottom p');
+
+    const footerCopyright = document.getElementById('copyrightText');
     if (footerCopyright) footerCopyright.textContent = dict.footerCopyright;
-    
+
     // Cart Drawer Header & Footer
     const cartHeaderTitle = document.querySelector('.cart-drawer-header h3');
     if (cartHeaderTitle) {
         cartHeaderTitle.innerHTML = `<i class="fa-solid fa-shopping-basket"></i> ${dict.basketTitle}`;
     }
-    
+
     const clearCartBtn = document.getElementById('clearCartBtn');
     if (clearCartBtn) clearCartBtn.textContent = dict.basketClearBtn;
-    
+
     const cartTotalLabel = document.querySelector('.cart-total-row span:first-child');
     if (cartTotalLabel) cartTotalLabel.textContent = dict.basketTotal;
-    
+
     const whatsappOrderBtn = document.getElementById('whatsappOrderBtn');
     if (whatsappOrderBtn) {
         whatsappOrderBtn.innerHTML = `<i class="fa-brands fa-whatsapp"></i> ${dict.basketOrderBtn}`;
     }
-    
+
     // Confirm Modal
     const modalTitle = document.querySelector('.confirm-modal-content h3');
     if (modalTitle) modalTitle.textContent = dict.confirmModalTitle;
-    
+
     const modalDesc = document.querySelector('.confirm-modal-content p');
     if (modalDesc) modalDesc.textContent = dict.confirmModalDesc;
-    
+
     const cancelConfirmBtn = document.getElementById('cancelConfirmBtn');
     if (cancelConfirmBtn) cancelConfirmBtn.textContent = dict.confirmModalCancel;
-    
+
     const acceptConfirmBtn = document.getElementById('acceptConfirmBtn');
     if (acceptConfirmBtn) acceptConfirmBtn.textContent = dict.confirmModalAccept;
-    
+
     // Toast Notification text
     const toastNotification = document.getElementById('toastNotification');
     if (toastNotification) {
@@ -493,22 +545,28 @@ function getTranslatedProduct(product) {
     const dict = translations[currentLang];
     let name = product.name;
     let unit = product.unit;
-    
-    if (product.id === 1) { name = dict.spinachName; }
-    else if (product.id === 2) { name = dict.carrotsName; }
-    else if (product.id === 3) { name = dict.tomatoesName; }
-    else if (product.id === 4) { name = dict.mangoesName; }
-    else if (product.id === 5) { name = dict.cabbageName; }
-    else if (product.id === 6) { name = dict.potatoesName; }
-    else if (product.id === 7) { name = dict.corianderName; }
-    else if (product.id === 8) { name = dict.ladyfingerName; }
-    else if (product.id === 9) { name = dict.bottlegourdName; }
-    
+
+    // Dynamic Firestore Localization
+    if (product.name_en && product.name_te) {
+        name = currentLang === 'te' ? product.name_te : product.name_en;
+    } else {
+        // Fallback to static dictionary translating for standard seeds
+        if (product.id === 1) { name = dict.spinachName; }
+        else if (product.id === 2) { name = dict.carrotsName; }
+        else if (product.id === 3) { name = dict.tomatoesName; }
+        else if (product.id === 4) { name = dict.mangoesName; }
+        else if (product.id === 5) { name = dict.cabbageName; }
+        else if (product.id === 6) { name = dict.potatoesName; }
+        else if (product.id === 7) { name = dict.corianderName; }
+        else if (product.id === 8) { name = dict.ladyfingerName; }
+        else if (product.id === 9) { name = dict.bottlegourdName; }
+    }
+
     if (product.unit === 'bunch') { unit = dict.unitBunch; }
     else if (product.unit === 'kg') { unit = dict.unitKg; }
     else if (product.unit === 'pc') { unit = dict.unitPc; }
     else if (product.unit === 'dozen') { unit = dict.unitDozen; }
-    
+
     return { ...product, name, unit };
 }
 
@@ -535,7 +593,7 @@ function loadCart() {
     if (stored) {
         try {
             cart = JSON.parse(stored);
-        } catch(e) {
+        } catch (e) {
             cart = {};
         }
     }
@@ -557,30 +615,44 @@ function closeCart() {
     cartOverlay.classList.remove('open');
 }
 
-// Render Products Grid
+// Render Products Grid (Supports real-time out of stock cards dynamically)
 function renderProducts(category = 'all') {
     productGrid.innerHTML = '';
-    
-    const filteredProducts = category === 'all' 
-        ? products 
+
+    const filteredProducts = category === 'all'
+        ? products
         : products.filter(p => p.category === category);
-        
+
     filteredProducts.forEach(rawProduct => {
         const product = getTranslatedProduct(rawProduct);
         const currentQty = cart[product.id] || 0;
         const card = document.createElement('div');
-        card.className = 'product-card';
+
+        const isOutOfStock = rawProduct.inStock === false;
+        card.className = isOutOfStock ? 'product-card out-of-stock' : 'product-card';
+
+        const outOfStockBadge = isOutOfStock
+            ? `<div class="out-of-stock-overlay">${translations[currentLang].outOfStock}</div>`
+            : '';
+
+        const buttonText = isOutOfStock
+            ? translations[currentLang].btnOutOfStock
+            : translations[currentLang].btnAddToBasket;
+
+        const buttonDisabled = isOutOfStock ? 'disabled style="pointer-events: none;"' : '';
+
         card.innerHTML = `
+            ${outOfStockBadge}
             <img src="${product.image}" alt="${product.name}" class="product-img">
             <div class="product-info">
                 <h4 class="product-title">${product.name}</h4>
                 <p class="product-price">${product.price} / ${product.unit}</p>
                 <div class="quantity-selector">
-                    <button class="qty-btn minus" onclick="updateQty(this, -1, ${product.id})">-</button>
+                    <button class="qty-btn minus" onclick="updateQty(this, -1, ${product.id})" ${isOutOfStock ? 'disabled' : ''}>-</button>
                     <span class="qty-val" id="qty-${product.id}">${currentQty}</span>
-                    <button class="qty-btn plus" onclick="updateQty(this, 1, ${product.id})">+</button>
+                    <button class="qty-btn plus" onclick="updateQty(this, 1, ${product.id})" ${isOutOfStock ? 'disabled' : ''}>+</button>
                 </div>
-                <button class="btn btn-primary btn-add-basket" id="btn-add-${product.id}" onclick="addProductToCart(${product.id})">${translations[currentLang].btnAddToBasket}</button>
+                <button class="btn btn-primary btn-add-basket" id="btn-add-${product.id}" onclick="addProductToCart(${product.id})" ${buttonDisabled}>${buttonText}</button>
             </div>
         `;
         productGrid.appendChild(card);
@@ -600,22 +672,21 @@ function updateQty(btn, change, productId) {
 function addProductToCart(productId) {
     const qtySpan = document.getElementById(`qty-${productId}`);
     if (!qtySpan) return;
-    
+
     let qty = parseInt(qtySpan.textContent);
-    
+
     if (qty === 0) {
-        // If quantity is 0, check if this product is in the cart and reset/remove it
         if (cart[productId] !== undefined) {
             delete cart[productId];
             saveCart();
             updateCartUI();
-            
+
             // Visual button feedback for reset
             const btn = document.getElementById(`btn-add-${productId}`);
             if (btn) {
                 const originalText = btn.textContent;
                 btn.textContent = translations[currentLang].btnReset;
-                btn.style.backgroundColor = "#d32f2f"; // Dark red for reset
+                btn.style.backgroundColor = "#d32f2f";
                 btn.style.borderColor = "#d32f2f";
                 setTimeout(() => {
                     btn.textContent = originalText;
@@ -623,33 +694,16 @@ function addProductToCart(productId) {
                     btn.style.borderColor = "";
                 }, 1200);
             }
-            
-            // Highlight the cart icon to show change
-            if (cartBtn) {
-                cartBtn.classList.remove('highlight');
-                void cartBtn.offsetWidth; // Trigger reflow to restart animation
-                cartBtn.classList.add('highlight');
-                setTimeout(() => {
-                    cartBtn.classList.remove('highlight');
-                }, 800);
-            }
-            if (cartFloatBtn) {
-                cartFloatBtn.classList.remove('highlight');
-                void cartFloatBtn.offsetWidth; // Trigger reflow to restart animation
-                cartFloatBtn.classList.add('highlight');
-                setTimeout(() => {
-                    cartFloatBtn.classList.remove('highlight');
-                }, 800);
-            }
+
+            triggerCartHighlight();
         }
         return;
     }
-    
-    // Set/update the product in the cart with the selected quantity
+
     cart[productId] = qty;
     saveCart();
     updateCartUI();
-    
+
     // Visual button feedback for add
     const btn = document.getElementById(`btn-add-${productId}`);
     if (btn) {
@@ -663,23 +717,22 @@ function addProductToCart(productId) {
             btn.style.borderColor = "";
         }, 1200);
     }
-    
-    // Highlight the cart icon
+
+    triggerCartHighlight();
+}
+
+function triggerCartHighlight() {
     if (cartBtn) {
         cartBtn.classList.remove('highlight');
-        void cartBtn.offsetWidth; // Trigger reflow to restart animation
+        void cartBtn.offsetWidth;
         cartBtn.classList.add('highlight');
-        setTimeout(() => {
-            cartBtn.classList.remove('highlight');
-        }, 800);
+        setTimeout(() => { cartBtn.classList.remove('highlight'); }, 800);
     }
     if (cartFloatBtn) {
         cartFloatBtn.classList.remove('highlight');
-        void cartFloatBtn.offsetWidth; // Trigger reflow to restart animation
+        void cartFloatBtn.offsetWidth;
         cartFloatBtn.classList.add('highlight');
-        setTimeout(() => {
-            cartFloatBtn.classList.remove('highlight');
-        }, 800);
+        setTimeout(() => { cartFloatBtn.classList.remove('highlight'); }, 800);
     }
 }
 
@@ -687,25 +740,22 @@ function addProductToCart(productId) {
 function updateCartItemQty(productId, change) {
     if (!cart[productId]) return;
     cart[productId] += change;
-    
+
     if (cart[productId] <= 0) {
         delete cart[productId];
-        // Sync product card
         const qtySpan = document.getElementById(`qty-${productId}`);
         if (qtySpan) qtySpan.textContent = '0';
     } else {
-        // Sync product card
         const qtySpan = document.getElementById(`qty-${productId}`);
         if (qtySpan) qtySpan.textContent = cart[productId];
     }
-    
+
     saveCart();
     updateCartUI();
 }
 
 // Refresh Cart UI
 function updateCartUI() {
-    // 1. Badge count
     const totalItems = Object.values(cart).reduce((sum, q) => sum + q, 0);
     cartBadge.textContent = totalItems;
     cartBadge.style.display = totalItems > 0 ? 'flex' : 'none';
@@ -713,19 +763,16 @@ function updateCartUI() {
         cartBadgeFloat.textContent = totalItems;
         cartBadgeFloat.style.display = totalItems > 0 ? 'flex' : 'none';
     }
-    
+
     const cartKeys = Object.keys(cart);
-    
-    // Toggle Clear All button
     const clearBtn = document.getElementById('clearCartBtn');
     if (clearBtn) {
         clearBtn.style.display = cartKeys.length > 0 ? 'inline-block' : 'none';
     }
-    
-    // 2. Render items in drawer
+
     cartDrawerItems.innerHTML = '';
     let totalSum = 0;
-    
+
     if (cartKeys.length === 0) {
         cartDrawerItems.innerHTML = `
             <div class="cart-empty-state">
@@ -740,22 +787,22 @@ function updateCartUI() {
         whatsappOrderBtn.style.cursor = 'not-allowed';
         return;
     }
-    
+
     whatsappOrderBtn.disabled = false;
     whatsappOrderBtn.style.opacity = '1';
     whatsappOrderBtn.style.cursor = 'pointer';
-    
+
     cartKeys.forEach(idStr => {
         const id = parseInt(idStr);
         const rawProduct = products.find(p => p.id === id);
         if (!rawProduct) return;
-        
+
         const product = getTranslatedProduct(rawProduct);
         const qty = cart[id];
         const priceNum = parseInt(product.price.replace(/[^\d]/g, ''));
         const itemTotal = priceNum * qty;
         totalSum += itemTotal;
-        
+
         const itemEl = document.createElement('div');
         itemEl.className = 'cart-item';
         itemEl.innerHTML = `
@@ -772,7 +819,7 @@ function updateCartUI() {
         `;
         cartDrawerItems.appendChild(itemEl);
     });
-    
+
     cartTotalSum.textContent = `₹${totalSum}`;
 }
 
@@ -781,21 +828,18 @@ const confirmModal = document.getElementById('confirmModal');
 const cancelConfirmBtn = document.getElementById('cancelConfirmBtn');
 const acceptConfirmBtn = document.getElementById('acceptConfirmBtn');
 
-// Clear all items from the cart (Trigger custom modal)
 function clearCart() {
     if (confirmModal) {
         confirmModal.classList.add('open');
     }
 }
 
-// Close custom confirmation modal
 function closeConfirmModal() {
     if (confirmModal) {
         confirmModal.classList.remove('open');
     }
 }
 
-// Attach confirmation events if elements exist
 if (cancelConfirmBtn && acceptConfirmBtn) {
     cancelConfirmBtn.addEventListener('click', closeConfirmModal);
     acceptConfirmBtn.addEventListener('click', () => {
@@ -805,8 +849,6 @@ if (cancelConfirmBtn && acceptConfirmBtn) {
         renderProducts();
         closeConfirmModal();
     });
-    
-    // Close modal when clicking outside the content area
     confirmModal.addEventListener('click', (e) => {
         if (e.target === confirmModal) {
             closeConfirmModal();
@@ -818,11 +860,11 @@ if (cancelConfirmBtn && acceptConfirmBtn) {
 function sendCartWhatsAppOrder() {
     const cartKeys = Object.keys(cart);
     if (cartKeys.length === 0) return;
-    
+
     const isTe = currentLang === 'te';
     let message = isTe ? `*కొత్త ఆర్డర్ - క్షేత్రీవ ఫార్మ్స్*\n` : `*New Order - Kshetriva Farms*\n`;
     message += `===============================\n`;
-    
+
     let totalSum = 0;
     cartKeys.forEach((idStr, index) => {
         const id = parseInt(idStr);
@@ -836,12 +878,12 @@ function sendCartWhatsAppOrder() {
             message += `${index + 1}. *${product.name}* - ${qty} ${product.unit} (₹${itemTotal})\n`;
         }
     });
-    
+
     message += `===============================\n`;
     message += isTe ? `*మొత్తం చెల్లింపు:* ₹${totalSum}\n\n` : `*Total Amount:* ₹${totalSum}\n\n`;
     message += isTe ? `దయచేసి నా ఆర్డర్‌ను ధృవీకరించండి మరియు డెలివరీ వివరాలను తెలపండి.\n` : `Please confirm my order and let me know delivery details.\n`;
     message += isTe ? `_డెలివరీ చిరునామా వివరాలు ఇక్కడ షేర్ చేయబడతాయి._` : `_Delivery Address details will be shared._`;
-    
+
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/918374276995?text=${encoded}`, '_blank');
 }
@@ -859,6 +901,9 @@ if (langToggle) {
         applyLanguage();
         renderProducts();
         updateCartUI();
+        if (isAdminLoggedIn()) {
+            renderAdminProducts();
+        }
     });
 }
 closeCartBtn.addEventListener('click', closeCart);
@@ -870,7 +915,7 @@ filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         filterBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
+
         const filter = btn.getAttribute('data-filter');
         renderProducts(filter);
     });
@@ -900,9 +945,7 @@ const toastNotification = document.getElementById('toastNotification');
 
 if (emailContactBtn && toastNotification) {
     emailContactBtn.addEventListener('click', (e) => {
-        // Copy email address to clipboard
         navigator.clipboard.writeText('farm@kshetrivafarms.com').then(() => {
-            // Show toast notification
             toastNotification.classList.add('show');
             setTimeout(() => {
                 toastNotification.classList.remove('show');
@@ -913,8 +956,459 @@ if (emailContactBtn && toastNotification) {
     });
 }
 
-// Init App
+
+/* ==========================================================================
+   Admin Operations & Database Syncing Logic
+   ========================================================================== */
+
+// Seeding Firestore Database on initial load if empty
+function seedDatabase() {
+    if (!useFirebase || !db) return;
+    console.log("Seeding Firestore with default catalog...");
+    const batch = db.batch();
+    const collectionRef = db.collection("products");
+
+    const defaultCatalog = [
+        { id: 1, name: "Fresh Spinach (Palak)", category: "leafy", price: "₹40", unit: "bunch", image: "images/spinach.webp", inStock: true },
+        { id: 2, name: "Organic Carrots", category: "root", price: "₹60", unit: "kg", image: "images/carrots.webp", inStock: true },
+        { id: 3, name: "Red Tomatoes", category: "organic", price: "₹50", unit: "kg", image: "images/tomatoes.webp", inStock: true },
+        { id: 4, name: "Alphonso Mangoes", category: "fruits", price: "₹400", unit: "dozen", image: "images/mangoes.webp", inStock: true },
+        { id: 5, name: "Fresh Cabbage", category: "leafy", price: "₹30", unit: "pc", image: "images/cabbage.webp", inStock: true },
+        { id: 6, name: "Fresh Potatoes (Aloo)", category: "root", price: "₹30", unit: "kg", image: "images/potatoes.webp", inStock: true },
+        { id: 7, name: "Fresh Coriander (Kothmir)", category: "leafy", price: "₹20", unit: "bunch", image: "images/coriander.webp", inStock: true },
+        { id: 8, name: "Fresh Lady Finger (Bhindi)", category: "organic", price: "₹60", unit: "kg", image: "images/lady_finger.webp", inStock: true },
+        { id: 9, name: "Fresh Bottle Gourd (Lauki)", category: "organic", price: "₹40", unit: "pc", image: "images/bottle_gourd.webp", inStock: true }
+    ];
+
+    defaultCatalog.forEach((item) => {
+        const docRef = collectionRef.doc(`prod_${item.id}`);
+        batch.set(docRef, item);
+    });
+
+    batch.commit().then(() => {
+        console.log("Database seeded successfully.");
+    }).catch(err => console.error("Database seeding failed:", err));
+}
+
+// Router for hidden hash #admin route
+window.addEventListener('hashchange', checkHashRoute);
+window.addEventListener('load', checkHashRoute);
+
+function checkHashRoute() {
+    if (window.location.hash === '#admin') {
+        openAdminPortal();
+    } else {
+        closeAdminPortal();
+    }
+}
+
+function openAdminPortal() {
+    if (isAdminLoggedIn()) {
+        openAdminDashboard();
+    } else {
+        openAdminLogin();
+    }
+}
+
+function closeAdminPortal() {
+    document.getElementById('adminLoginModal').classList.remove('open');
+    document.getElementById('adminDashboardOverlay').classList.remove('open');
+    if (window.location.hash === '#admin') {
+        history.pushState("", document.title, window.location.pathname + window.location.search);
+    }
+}
+
+function isAdminLoggedIn() {
+    if (useFirebase && auth) {
+        return auth.currentUser !== null;
+    }
+    return sessionStorage.getItem('kshetriva_admin_session') === 'active';
+}
+
+function openAdminLogin() {
+    document.getElementById('adminLoginModal').classList.add('open');
+    document.getElementById('adminDashboardOverlay').classList.remove('open');
+}
+
+function closeAdminLogin() {
+    document.getElementById('adminLoginModal').classList.remove('open');
+}
+
+function openAdminDashboard() {
+    document.getElementById('adminLoginModal').classList.remove('open');
+    document.getElementById('adminDashboardOverlay').classList.add('open');
+    renderAdminProducts();
+    updateAdminStats();
+}
+
+function closeAdminDashboard() {
+    document.getElementById('adminDashboardOverlay').classList.remove('open');
+}
+
+// Login authentication trigger
+function handleAdminLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('adminEmail').value;
+    const password = document.getElementById('adminPassword').value;
+    const errorDiv = document.getElementById('adminLoginError');
+
+    errorDiv.style.display = 'none';
+
+    if (useFirebase && auth) {
+        auth.signInWithEmailAndPassword(email, password)
+            .then(() => {
+                closeAdminLogin();
+                openAdminDashboard();
+            })
+            .catch((err) => {
+                errorDiv.textContent = "Firebase Error: " + err.message;
+                errorDiv.style.display = 'block';
+            });
+    } else {
+        // Fallback offline mock session
+        if (email === 'admin@kshetrivafarms.com' && password === 'admin123') {
+            sessionStorage.setItem('kshetriva_admin_session', 'active');
+            closeAdminLogin();
+            openAdminDashboard();
+        } else {
+            errorDiv.textContent = "Invalid fallback credentials (use admin@kshetrivafarms.com and admin123)";
+            errorDiv.style.display = 'block';
+        }
+    }
+}
+
+// Logout authentication trigger
+function handleAdminLogout() {
+    if (useFirebase && auth) {
+        auth.signOut().then(() => {
+            closeAdminDashboard();
+            closeAdminPortal();
+        }).catch(err => console.error("Signout error:", err));
+    } else {
+        sessionStorage.removeItem('kshetriva_admin_session');
+        closeAdminDashboard();
+        closeAdminPortal();
+    }
+}
+
+// Sync fallback mock products database changes locally
+function saveProductsLocal() {
+    if (!useFirebase) {
+        localStorage.setItem('kshetriva_catalog', JSON.stringify(products));
+        renderProducts();
+        updateCartUI();
+        renderAdminProducts();
+        updateAdminStats();
+    }
+}
+
+// Render Dashboard products list
+function renderAdminProducts() {
+    const listContainer = document.getElementById('adminProductsList');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+
+    products.forEach((rawProduct) => {
+        const product = getTranslatedProduct(rawProduct);
+        const tr = document.createElement('tr');
+
+        const catLabel = product.category.charAt(0).toUpperCase() + product.category.slice(1);
+        const isChecked = product.inStock !== false ? 'checked' : '';
+
+        const stockStatusText = product.inStock !== false
+            ? `<span class="admin-stock-indicator in-stock"><i class="fa-solid fa-check-circle"></i> In Stock</span>`
+            : `<span class="admin-stock-indicator out-of-stock"><i class="fa-solid fa-circle-xmark"></i> Out of Stock</span>`;
+
+        tr.innerHTML = `
+            <td><img src="${product.image}" alt="${product.name}" class="admin-table-img"></td>
+            <td>
+                <div class="admin-table-title">${product.name_en || product.name}</div>
+                <div class="admin-table-subtitle">${product.name_te || ''}</div>
+            </td>
+            <td><span class="admin-table-badge ${product.category}">${catLabel}</span></td>
+            <td><strong>${product.price}</strong> / ${product.unit}</td>
+            <td>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <label class="stock-toggle">
+                        <input type="checkbox" onchange="toggleProductStock('${product.docId || ''}', ${product.id}, this.checked)" ${isChecked}>
+                        <span class="stock-slider"></span>
+                    </label>
+                    ${stockStatusText}
+                </div>
+            </td>
+            <td>
+                <div class="admin-action-btns">
+                    <button class="admin-action-btn edit" onclick="editProductModal('${product.docId || ''}', ${product.id})" title="Edit Product"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="admin-action-btn delete" onclick="deleteProduct('${product.docId || ''}', ${product.id})" title="Delete Product"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            </td>
+        `;
+        listContainer.appendChild(tr);
+    });
+}
+
+// Update Dashboard Counter statistics
+function updateAdminStats() {
+    const totalEl = document.getElementById('statTotalProducts');
+    const inStockEl = document.getElementById('statInStock');
+    const outStockEl = document.getElementById('statOutOfStock');
+
+    if (!totalEl || !inStockEl || !outStockEl) return;
+
+    const total = products.length;
+    const inStock = products.filter(p => p.inStock !== false).length;
+    const outStock = total - inStock;
+
+    totalEl.textContent = total;
+    inStockEl.textContent = inStock;
+    outStockEl.textContent = outStock;
+}
+
+// Toggle Stock level dynamically
+function toggleProductStock(docId, id, isChecked) {
+    if (useFirebase && db && docId) {
+        db.collection("products").doc(docId).update({
+            inStock: isChecked
+        }).then(() => {
+            console.log("Live Stock status synced successfully.");
+        }).catch(err => console.error("Firestore stock update error:", err));
+    } else {
+        const product = products.find(p => p.id === id);
+        if (product) {
+            product.inStock = isChecked;
+            saveProductsLocal();
+        }
+    }
+}
+
+// Product CRUD Editor Actions
+const productFormModalEl = document.getElementById('productFormModal');
+
+function openProductFormModal() {
+    document.getElementById('productFormTitle').textContent = "Add New Product";
+    document.getElementById('formProductId').value = '';
+    document.getElementById('productEntryForm').reset();
+    productFormModalEl.classList.add('open');
+}
+
+function closeProductFormModal() {
+    productFormModalEl.classList.remove('open');
+}
+
+function editProductModal(docId, id) {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+
+    document.getElementById('productFormTitle').textContent = "Edit Product";
+    document.getElementById('formProductId').value = id;
+
+    document.getElementById('prodNameEn').value = product.name_en || product.name;
+    document.getElementById('prodNameTe').value = product.name_te || '';
+    document.getElementById('prodCategory').value = product.category;
+    document.getElementById('prodUnit').value = product.unit;
+
+    const priceNum = parseInt(product.price.replace(/[^\d]/g, ''));
+    document.getElementById('prodPrice').value = priceNum;
+    document.getElementById('prodImageUrl').value = product.image;
+    document.getElementById('prodInStock').checked = product.inStock !== false;
+
+    productFormModalEl.classList.add('open');
+}
+
+function saveProduct(e) {
+    e.preventDefault();
+    const idVal = document.getElementById('formProductId').value;
+    const nameEn = document.getElementById('prodNameEn').value;
+    const nameTe = document.getElementById('prodNameTe').value;
+    const category = document.getElementById('prodCategory').value;
+    const unit = document.getElementById('prodUnit').value;
+    const price = parseInt(document.getElementById('prodPrice').value);
+    const imageUrl = document.getElementById('prodImageUrl').value;
+    const inStock = document.getElementById('prodInStock').checked;
+
+    const formattedPrice = `₹${price}`;
+
+    if (useFirebase && db) {
+        if (idVal) {
+            const id = parseInt(idVal);
+            const product = products.find(p => p.id === id);
+            if (product && product.docId) {
+                db.collection("products").doc(product.docId).update({
+                    name_en: nameEn,
+                    name_te: nameTe,
+                    name: nameEn,
+                    category: category,
+                    unit: unit,
+                    price: formattedPrice,
+                    image: imageUrl,
+                    inStock: inStock
+                }).then(() => {
+                    closeProductFormModal();
+                }).catch(err => console.error("Firebase dynamic update failed:", err));
+            }
+        } else {
+            const nextId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+            const newDocId = `prod_${nextId}`;
+
+            db.collection("products").doc(newDocId).set({
+                id: nextId,
+                name_en: nameEn,
+                name_te: nameTe,
+                name: nameEn,
+                category: category,
+                unit: unit,
+                price: formattedPrice,
+                image: imageUrl,
+                inStock: inStock
+            }).then(() => {
+                closeProductFormModal();
+            }).catch(err => console.error("Firebase dynamic creation failed:", err));
+        }
+    } else {
+        // Local Fallback CRUD Updates
+        if (idVal) {
+            const id = parseInt(idVal);
+            const productIndex = products.findIndex(p => p.id === id);
+            if (productIndex !== -1) {
+                products[productIndex] = {
+                    ...products[productIndex],
+                    name_en: nameEn,
+                    name_te: nameTe,
+                    name: nameEn,
+                    category: category,
+                    unit: unit,
+                    price: formattedPrice,
+                    image: imageUrl,
+                    inStock: inStock
+                };
+                saveProductsLocal();
+                closeProductFormModal();
+            }
+        } else {
+            const nextId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+            products.push({
+                id: nextId,
+                name_en: nameEn,
+                name_te: nameTe,
+                name: nameEn,
+                category: category,
+                unit: unit,
+                price: formattedPrice,
+                image: imageUrl,
+                inStock: inStock
+            });
+            saveProductsLocal();
+            closeProductFormModal();
+        }
+    }
+}
+
+function deleteProduct(docId, id) {
+    if (!confirm("Are you sure you want to delete this product from the dynamic inventory?")) return;
+
+    if (useFirebase && db && docId) {
+        db.collection("products").doc(docId).delete()
+            .then(() => {
+                console.log("Product successfully removed from Live database.");
+            })
+            .catch(err => console.error("Firestore document deletion failed:", err));
+    } else {
+        const productIndex = products.findIndex(p => p.id === id);
+        if (productIndex !== -1) {
+            products.splice(productIndex, 1);
+            saveProductsLocal();
+        }
+    }
+}
+
+// Attach Admin Panel Trigger Links
+const adminLink = document.getElementById('adminLink');
+const closeAdminLoginBtn = document.getElementById('closeAdminLoginBtn');
+const closeAdminDashBtn = document.getElementById('closeAdminDashBtn');
+
+if (adminLink) {
+    adminLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.hash = 'admin';
+    });
+}
+
+if (closeAdminLoginBtn) {
+    closeAdminLoginBtn.addEventListener('click', closeAdminPortal);
+}
+
+if (closeAdminDashBtn) {
+    closeAdminDashBtn.addEventListener('click', closeAdminPortal);
+}
+
+
+/* ==========================================================================
+   Live Database Handshake Event Listeners
+   ========================================================================== */
+
+// Firestore live real-time query listener
+if (useFirebase && db) {
+    db.collection("products").orderBy("id", "asc").onSnapshot((snapshot) => {
+        let dbProducts = [];
+        snapshot.forEach((doc) => {
+            dbProducts.push({
+                docId: doc.id,
+                ...doc.data()
+            });
+        });
+
+        if (dbProducts.length > 0) {
+            products = dbProducts;
+            renderProducts();
+            updateCartUI();
+            if (isAdminLoggedIn()) {
+                renderAdminProducts();
+                updateAdminStats();
+            }
+        } else {
+            // Seed base items to firestore
+            seedDatabase();
+        }
+    }, (error) => {
+        console.error("Firestore catalog snap update exception:", error);
+    });
+}
+
+// Live Auth status state persistence listener
+if (useFirebase && auth) {
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            console.log("Admin status check: Live Auth connected.");
+            if (window.location.hash === '#admin') {
+                openAdminDashboard();
+            }
+        } else {
+            console.log("Admin status check: Guest status active.");
+            if (window.location.hash === '#admin') {
+                openAdminLogin();
+            }
+        }
+    });
+}
+
+
+/* ==========================================================================
+   Application Boot Initialization
+   ========================================================================== */
+
 loadCart();
 applyLanguage();
 updateCartUI();
 renderProducts();
+checkHashRoute();
+
+// Force Hero Video to Autoplay overriding aggressive browser autoplay block policies
+document.addEventListener('DOMContentLoaded', () => {
+    const heroVideo = document.querySelector('.hero-video');
+    if (heroVideo) {
+        heroVideo.muted = true;
+        heroVideo.play().catch(err => {
+            console.warn("Browser autoplay restrictions prevented video playback. Retrying...", err);
+        });
+    }
+});

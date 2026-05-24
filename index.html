@@ -314,15 +314,14 @@
                 <div class="footer-col">
                     <h4>Follow Us</h4>
                     <div class="social-links">
-                        <!-- <a href="#"><i class="fa-brands fa-facebook-f"></i></a> -->
-                        <a href="https://www.instagram.com/kshetrivafarms?igsh=dGV5d3I2d2Rhc2t2" target="_blank"><i
-                                class="fa-brands fa-instagram"></i></a>
-                        <!-- <a href="#"><i class="fa-brands fa-twitter"></i></a> -->
+                        <a href="https://www.instagram.com/kshetrivafarms?igsh=dGV5d3I2d2Rhc2t2" target="_blank"><i class="fa-brands fa-instagram"></i></a>
                     </div>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Kshetriva Farms. All rights reserved.</p>
+            <div class="footer-bottom" style="display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <p id="copyrightText" style="margin: 0;">&copy; 2026 Kshetriva Farms. All rights reserved.</p>
+                <span style="color: rgba(255,255,255,0.2);">|</span>
+                <a href="#admin" id="adminLink" style="opacity: 0.6; transition: var(--transition); cursor: pointer; display: inline-flex; align-items: center; gap: 5px;"><i class="fa-solid fa-lock" style="font-size: 0.8rem;"></i>Admin Panel</a>
             </div>
         </div>
     </footer>
@@ -380,8 +379,163 @@
         <i class="fa-solid fa-check-circle"></i> Email copied to clipboard!
     </div>
 
+    <!-- Admin Login Modal Overlay -->
+    <div class="admin-login-modal" id="adminLoginModal">
+        <div class="admin-login-content">
+            <button class="close-admin-login" id="closeAdminLoginBtn">&times;</button>
+            <h3><i class="fa-solid fa-lock"></i> Admin Portal</h3>
+            <p class="admin-subtitle">Enter credentials to manage Kshetriva Farms catalog</p>
+            <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label for="adminEmail" style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">Email Address</label>
+                    <input type="email" id="adminEmail" required placeholder="admin@kshetrivafarms.com" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label for="adminPassword" style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">Password</label>
+                    <input type="password" id="adminPassword" required placeholder="••••••••" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                </div>
+                <div class="admin-login-error" id="adminLoginError" style="color: #d32f2f; font-size: 0.85rem; margin-bottom: 10px; display: none;"></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; border-radius: 8px;">Login to Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard Overlay Panel -->
+    <div class="admin-dashboard-overlay" id="adminDashboardOverlay">
+        <div class="admin-dashboard-container">
+            <header class="admin-dash-header">
+                <div class="admin-header-title">
+                    <h2><i class="fa-solid fa-tractor"></i> Kshetriva Farms Admin</h2>
+                    <span class="admin-badge">Live Inventory Portal</span>
+                </div>
+                <div class="admin-header-actions">
+                    <button class="btn btn-primary" onclick="openProductFormModal()" style="padding: 10px 20px; border-radius: 30px; font-size: 0.9rem;"><i class="fa-solid fa-plus"></i> Add New Product</button>
+                    <button class="btn btn-secondary" onclick="handleAdminLogout()" id="adminLogoutBtn" style="padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; border: 2px solid #888; color: #555;"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+                    <button class="close-admin-dash" id="closeAdminDashBtn">&times;</button>
+                </div>
+            </header>
+
+            <main class="admin-dash-main">
+                <div class="admin-stats-row">
+                    <div class="admin-stat-card">
+                        <div class="stat-icon" style="color: var(--primary-color); background: rgba(46,125,50,0.1);"><i class="fa-solid fa-carrot"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Total Products</span>
+                            <h4 id="statTotalProducts">0</h4>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-icon" style="color: var(--secondary-color); background: rgba(76,175,80,0.1);"><i class="fa-solid fa-check-double"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">In Stock</span>
+                            <h4 id="statInStock">0</h4>
+                        </div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="stat-icon" style="color: #d32f2f; background: rgba(211,47,47,0.1);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Out of Stock</span>
+                            <h4 id="statOutOfStock">0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-table-container">
+                    <table class="admin-products-table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Product Name (EN / TE)</th>
+                                <th>Category</th>
+                                <th>Price & Unit</th>
+                                <th>Stock Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminProductsList">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Product Modal Form -->
+    <div class="product-form-modal" id="productFormModal">
+        <div class="product-form-content">
+            <button class="close-product-form" onclick="closeProductFormModal()">&times;</button>
+            <h3 id="productFormTitle">Add New Product</h3>
+            <form id="productEntryForm" onsubmit="saveProduct(event)">
+                <input type="hidden" id="formProductId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prodNameEn">Product Name (English)</label>
+                        <input type="text" id="prodNameEn" required placeholder="e.g. Fresh Spinach (Palak)">
+                    </div>
+                    <div class="form-group">
+                        <label for="prodNameTe">Product Name (Telugu)</label>
+                        <input type="text" id="prodNameTe" required placeholder="e.g. తాజా పాలకూర (పాలక్)">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prodCategory">Category</label>
+                        <select id="prodCategory" required>
+                            <option value="leafy">Leafy Vegetables</option>
+                            <option value="root">Root Vegetables</option>
+                            <option value="seasonal">Seasonal</option>
+                            <option value="organic">Organic</option>
+                            <option value="fruits">Fruits</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="prodUnit">Unit Type</label>
+                        <select id="prodUnit" required>
+                            <option value="bunch">bunch / కట్ట</option>
+                            <option value="kg">kg / కిలో</option>
+                            <option value="pc">pc / ముక్క / కాయ</option>
+                            <option value="dozen">dozen / డజను</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prodPrice">Price (in ₹, e.g. 40)</label>
+                        <input type="number" id="prodPrice" required placeholder="e.g. 40">
+                    </div>
+                    <div class="form-group">
+                        <label for="prodImageUrl">Image Sourcing Path / URL</label>
+                        <input type="text" id="prodImageUrl" required placeholder="e.g. images/spinach.webp">
+                    </div>
+                </div>
+
+                <div class="form-group-stock" style="display: flex; align-items: center; gap: 10px; margin-top: 15px; text-align: left;">
+                    <label for="prodInStock" style="font-weight: 600; font-size: 0.95rem; cursor: pointer; user-select: none;">Available in Stock:</label>
+                    <label class="stock-toggle">
+                        <input type="checkbox" id="prodInStock" checked>
+                        <span class="stock-slider"></span>
+                    </label>
+                </div>
+
+                <div class="product-form-buttons" style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeProductFormModal()" style="border: 2px solid #888; color: #555; border-radius: 20px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveProductBtn" style="border-radius: 20px;">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK compat libraries -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <!-- Custom Script -->
-    <script src="script.js?v=1.4"></script>
+    <script src="script.js?v=1.5"></script>
 </body>
 
 </html>
