@@ -17,7 +17,7 @@ let useFirebase = false;
 let products = [
     {
         id: 1,
-        name: "Fresh Spinach (Palak)",
+        name: "Spinach (Palak)",
         category: "leafy",
         price: "₹40",
         unit: "bunch",
@@ -26,7 +26,7 @@ let products = [
     },
     {
         id: 2,
-        name: "Organic Carrots",
+        name: "Carrots",
         category: "root",
         price: "₹60",
         unit: "kg",
@@ -36,7 +36,7 @@ let products = [
     {
         id: 3,
         name: "Red Tomatoes",
-        category: "organic",
+        category: "vegetables",
         price: "₹50",
         unit: "kg",
         image: "images/tomatoes.webp",
@@ -53,7 +53,7 @@ let products = [
     },
     {
         id: 5,
-        name: "Fresh Cabbage",
+        name: "Cabbage",
         category: "leafy",
         price: "₹30",
         unit: "pc",
@@ -62,7 +62,7 @@ let products = [
     },
     {
         id: 6,
-        name: "Fresh Potatoes (Aloo)",
+        name: "Potatoes (Aloo)",
         category: "root",
         price: "₹30",
         unit: "kg",
@@ -71,7 +71,7 @@ let products = [
     },
     {
         id: 7,
-        name: "Fresh Coriander (Kothmir)",
+        name: "Coriander (Kothmir)",
         category: "leafy",
         price: "₹20",
         unit: "bunch",
@@ -80,8 +80,8 @@ let products = [
     },
     {
         id: 8,
-        name: "Fresh Lady Finger (Bhindi)",
-        category: "organic",
+        name: "Lady Finger (Bhindi)",
+        category: "vegetables",
         price: "₹60",
         unit: "kg",
         image: "images/lady_finger.webp",
@@ -89,8 +89,8 @@ let products = [
     },
     {
         id: 9,
-        name: "Fresh Bottle Gourd (Lauki)",
-        category: "organic",
+        name: "Bottle Gourd (Lauki)",
+        category: "vegetables",
         price: "₹40",
         unit: "pc",
         image: "images/bottle_gourd.webp",
@@ -113,6 +113,10 @@ try {
         if (offlineCatalog) {
             try {
                 products = JSON.parse(offlineCatalog);
+                // Migrate legacy 'organic' category to 'vegetables'
+                products.forEach(p => {
+                    if (p.category === 'organic') p.category = 'vegetables';
+                });
             } catch (e) {
                 console.error("Failed to parse offline localStorage catalog:", e);
             }
@@ -165,16 +169,16 @@ const translations = {
         filterLeafy: "Leafy Vegetables",
         filterRoot: "Root Vegetables",
         filterSeasonal: "Seasonal",
-        filterOrganic: "Organic",
+        filterOrganic: "Vegetables",
         filterFruits: "Fruits",
         farmersTitle: "Meet Our Farmers",
         farmersSubtitle: "The proud hands that feed our community",
-        farmer1Name: "Ramesh Kumar",
-        farmer1Story: "Ramesh has been cultivating organic root vegetables for over 15 years. His dedication to sustainable farming ensures the best quality carrots and beets.",
-        farmer2Name: "Sunita Devi",
-        farmer2Story: "A pioneer in leafy greens. Sunita uses natural compost to grow the freshest spinach and kale. Kshetriva helps her sell directly without relying on wholesale markets.",
-        farmer3Name: "Ashok Singh",
-        farmer3Story: "Specializing in seasonal fruits, Ashok's farm is a local legend for sweet mangoes and guavas. He loves seeing photos of families enjoying his harvest.",
+        farmer1Name: "E. Surendhar Reddy",
+        farmer1Story: "Surendhar has been cultivating organic root vegetables for over 15 years. His dedication to sustainable farming ensures the best quality carrots and beets.",
+        farmer2Name: "E. Bhaskar Reddy",
+        farmer2Story: "A pioneer in leafy greens. Bhaskar uses natural compost to grow the freshest spinach and kale. Kshetriva helps him sell directly without relying on wholesale markets.",
+        farmer3Name: "P. Raju",
+        farmer3Story: "Specializing in seasonal fruits, Raju's farm is a local legend for sweet mangoes and guavas. He loves seeing photos of families enjoying his harvest.",
         galleryTitle: "Farm Gallery",
         gallerySubtitle: "Glimpses of our daily farm life and deliveries",
         galleryItem1: "Lush Fields",
@@ -205,15 +209,15 @@ const translations = {
         confirmModalCancel: "Cancel",
         confirmModalAccept: "Clear All",
 
-        spinachName: "Fresh Spinach (Palak)",
-        carrotsName: "Organic Carrots",
+        spinachName: "Spinach (Palak)",
+        carrotsName: "Carrots",
         tomatoesName: "Red Tomatoes",
         mangoesName: "Alphonso Mangoes",
-        cabbageName: "Fresh Cabbage",
-        potatoesName: "Fresh Potatoes (Aloo)",
-        corianderName: "Fresh Coriander (Kothmir)",
-        ladyfingerName: "Fresh Lady Finger (Bhindi)",
-        bottlegourdName: "Fresh Bottle Gourd (Lauki)",
+        cabbageName: "Cabbage",
+        potatoesName: "Potatoes (Aloo)",
+        corianderName: "Coriander (Kothmir)",
+        ladyfingerName: "Lady Finger (Bhindi)",
+        bottlegourdName: "Bottle Gourd (Lauki)",
 
         unitBunch: "bunch",
         unitKg: "kg",
@@ -266,16 +270,16 @@ const translations = {
         filterLeafy: "ఆకుకూరలు",
         filterRoot: "దుంపలు",
         filterSeasonal: "సీజనల్",
-        filterOrganic: "ఆర్గానిక్",
+        filterOrganic: "కూరగాయలు",
         filterFruits: "పండ్లు",
         farmersTitle: "మా రైతులను కలవండి",
         farmersSubtitle: "మన సమాజానికి ఆహారాన్ని అందించే గర్వించదగిన హస్తాలు",
-        farmer1Name: "రమేష్ కుమార్",
-        farmer1Story: "రమేష్ 15 సంవత్సరాలకు పైగా సేంద్రీయ దుంప కూరగాయలను పండిస్తున్నారు. స్థిరమైన వ్యవసాయం పట్ల ఆయనకున్న అంకితభావం ఉత్తమ నాణ్యమైన క్యారెట్లు మరియు బీట్‌రూట్‌లను నిర్ధారిస్తుంది.",
-        farmer2Name: "సునీతా దేవి",
-        farmer2Story: "ఆకుకూరల పెంపకంలో మార్గదర్శకురాలు. సునీత అత్యంత తాజా పాలకూర మరియు కేల్‌ను పండించడానికి సహజ ఎరువులను ఉపయోగిస్తుంది. క్షేత్రీవ హోల్‌సేల్ మార్కెట్లపై ఆధారపడకుండా నేరుగా విక్రయించడానికి ఆమెకు సహాయం చేస్తుంది.",
-        farmer3Name: "అశోక్ సింగ్",
-        farmer3Story: "సీజనల్ పండ్ల పెంపకంలో నైపుణ్యం కలిగిన అశోక్ తోట తీపి మామిడి మరియు జామకాయలకు స్థానికంగా ఎంతో ప్రసిద్ధి చెందింది. కుటుంబాలు తన పంటను ఆస్వాదిస్తున్న ఫోటోలను చూడటం ఆయనకు చాలా ఇష్టం.",
+        farmer1Name: "ఈ. సురేందర్ రెడ్డి",
+        farmer1Story: "సురేందర్ 15 సంవత్సరాలకు పైగా సేంద్రీయ దుంప కూరగాయలను పండిస్తున్నారు. స్థిరమైన వ్యవసాయం పట్ల ఆయనకున్న అంకితభావం ఉత్తమ నాణ్యమైన క్యారెట్లు మరియు బీట్‌రూట్‌లను నిర్ధారిస్తుంది.",
+        farmer2Name: "ఈ. భాస్కర్ రెడ్డి",
+        farmer2Story: "ఆకుకూరల పెంపకంలో మార్గదర్శకుడు. భాస్కర్ అత్యంత తాజా పాలకూర మరియు కేల్‌ను పండించడానికి సహజ ఎరువులను ఉపయోగిస్తారు. క్షేత్రీవ హోల్‌సేల్ మార్కెట్లపై ఆధారపడకుండా నేరుగా విక్రయించడానికి ఆయనకు సహాయం చేస్తుంది.",
+        farmer3Name: "పి. రాజు",
+        farmer3Story: "సీజనల్ పండ్ల పెంపకంలో నైపుణ్యం కలిగిన రాజు తోట తీపి మామిడి మరియు జామకాయలకు స్థానికంగా ఎంతో ప్రసిద్ధి చెందింది. కుటుంబాలు తన పంటను ఆస్వాదిస్తున్న ఫోటోలను చూడటం ఆయనకు చాలా ఇష్టం.",
         galleryTitle: "ఫార్మ్ గ్యాలరీ",
         gallerySubtitle: "మా రోజువారీ వ్యవసాయ జీవితం మరియు డెలివరీల جھలకలు",
         galleryItem1: "పచ్చని పొలాలు",
@@ -306,15 +310,15 @@ const translations = {
         confirmModalCancel: "రద్దు చేయి",
         confirmModalAccept: "అన్నీ తీసివేయి",
 
-        spinachName: "తాజా పాలకూర (పాలక్)",
-        carrotsName: "ఆర్గానిక్ క్యారెట్లు",
+        spinachName: "పాలకూర (పాలక్)",
+        carrotsName: "క్యారెట్లు",
         tomatoesName: "ఎర్రటి టమోటాలు",
         mangoesName: "అల్ఫోన్సో మామిడి పండ్లు",
-        cabbageName: "తాజా క్యాబేజీ",
-        potatoesName: "తాజా బంగాళాదుంపలు (ఆలూ)",
-        corianderName: "తాజా కొత్తిమీర",
-        ladyfingerName: "తాజా బెండకాయలు (భిండి)",
-        bottlegourdName: "తాజా ఆనపకాయ/సొరకాయ (లౌకి)",
+        cabbageName: "క్యాబేజీ",
+        potatoesName: "బంగాళాదుంపలు (ఆలూ)",
+        corianderName: "కొత్తిమీర",
+        ladyfingerName: "బెండకాయలు (భిండి)",
+        bottlegourdName: "ఆనపకాయ/సొరకాయ (లౌకి)",
 
         unitBunch: "కట్ట",
         unitKg: "కిలో",
@@ -430,14 +434,15 @@ function applyLanguage() {
 
     // Category Filters
     const filterBtnsEl = document.querySelectorAll('.category-filter .filter-btn');
-    if (filterBtnsEl.length >= 6) {
-        filterBtnsEl[0].textContent = dict.filterAll;
-        filterBtnsEl[1].textContent = dict.filterLeafy;
-        filterBtnsEl[2].textContent = dict.filterRoot;
-        filterBtnsEl[3].textContent = dict.filterSeasonal;
-        filterBtnsEl[4].textContent = dict.filterOrganic;
-        filterBtnsEl[5].textContent = dict.filterFruits;
-    }
+    filterBtnsEl.forEach(btn => {
+        const filter = btn.getAttribute('data-filter');
+        if (filter === 'all') btn.textContent = dict.filterAll;
+        else if (filter === 'leafy') btn.textContent = dict.filterLeafy;
+        else if (filter === 'root') btn.textContent = dict.filterRoot;
+        else if (filter === 'seasonal') btn.textContent = dict.filterSeasonal;
+        else if (filter === 'vegetables') btn.textContent = dict.filterOrganic;
+        else if (filter === 'fruits') btn.textContent = dict.filterFruits;
+    });
 
     // Farmers Titles
     const fTitle = document.querySelector('.farmers .section-title');
@@ -969,15 +974,15 @@ function seedDatabase() {
     const collectionRef = db.collection("products");
 
     const defaultCatalog = [
-        { id: 1, name: "Fresh Spinach (Palak)", category: "leafy", price: "₹40", unit: "bunch", image: "images/spinach.webp", inStock: true },
-        { id: 2, name: "Organic Carrots", category: "root", price: "₹60", unit: "kg", image: "images/carrots.webp", inStock: true },
-        { id: 3, name: "Red Tomatoes", category: "organic", price: "₹50", unit: "kg", image: "images/tomatoes.webp", inStock: true },
+        { id: 1, name: "Spinach (Palak)", category: "leafy", price: "₹40", unit: "bunch", image: "images/spinach.webp", inStock: true },
+        { id: 2, name: "Carrots", category: "root", price: "₹60", unit: "kg", image: "images/carrots.webp", inStock: true },
+        { id: 3, name: "Red Tomatoes", category: "vegetables", price: "₹50", unit: "kg", image: "images/tomatoes.webp", inStock: true },
         { id: 4, name: "Alphonso Mangoes", category: "fruits", price: "₹400", unit: "dozen", image: "images/mangoes.webp", inStock: true },
-        { id: 5, name: "Fresh Cabbage", category: "leafy", price: "₹30", unit: "pc", image: "images/cabbage.webp", inStock: true },
-        { id: 6, name: "Fresh Potatoes (Aloo)", category: "root", price: "₹30", unit: "kg", image: "images/potatoes.webp", inStock: true },
-        { id: 7, name: "Fresh Coriander (Kothmir)", category: "leafy", price: "₹20", unit: "bunch", image: "images/coriander.webp", inStock: true },
-        { id: 8, name: "Fresh Lady Finger (Bhindi)", category: "organic", price: "₹60", unit: "kg", image: "images/lady_finger.webp", inStock: true },
-        { id: 9, name: "Fresh Bottle Gourd (Lauki)", category: "organic", price: "₹40", unit: "pc", image: "images/bottle_gourd.webp", inStock: true }
+        { id: 5, name: "Cabbage", category: "leafy", price: "₹30", unit: "pc", image: "images/cabbage.webp", inStock: true },
+        { id: 6, name: "Potatoes (Aloo)", category: "root", price: "₹30", unit: "kg", image: "images/potatoes.webp", inStock: true },
+        { id: 7, name: "Coriander (Kothmir)", category: "leafy", price: "₹20", unit: "bunch", image: "images/coriander.webp", inStock: true },
+        { id: 8, name: "Lady Finger (Bhindi)", category: "vegetables", price: "₹60", unit: "kg", image: "images/lady_finger.webp", inStock: true },
+        { id: 9, name: "Bottle Gourd (Lauki)", category: "vegetables", price: "₹40", unit: "pc", image: "images/bottle_gourd.webp", inStock: true }
     ];
 
     defaultCatalog.forEach((item) => {
@@ -1358,6 +1363,10 @@ if (useFirebase && db) {
         });
 
         if (dbProducts.length > 0) {
+            // Migrate legacy 'organic' category to 'vegetables'
+            dbProducts.forEach(p => {
+                if (p.category === 'organic') p.category = 'vegetables';
+            });
             products = dbProducts;
             renderProducts();
             updateCartUI();
