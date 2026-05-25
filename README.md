@@ -17,7 +17,7 @@ In **Version 2**, the platform has transitioned from a static client-side applic
 
 ### 🟢 Direct-to-Consumer Model
 - **No Middlemen:** Directly connects Maryala's local growers with end-consumers.
-- **Farmer Spotlights:** Interactive bios showcasing stories, locations, and cultivation methods of our farmers (**Ramesh Kumar**, **Sunita Devi**, and **Ashok Singh**).
+- **Farmer Spotlights:** Interactive bios showcasing stories, locations, and cultivation methods of our farmers (**M. Surendhar Reddy**, **N. Bhaskar Reddy**, and **P. Raju**).
 - **Transparency:** Complete tracing from the soil to the kitchen table.
 
 ### 🔥 Firebase Real-Time Backend Integration
@@ -93,8 +93,8 @@ Kshetriva_farms/
 │   ├── favicon.png
 │   ├── logo_nav.webp
 │   ├── Kshetriva_Logo.jpg   # Brand logo asset (NEW in Version 2)
-│   ├── farmer_ramesh.webp
-│   ├── farmer_sunita.webp
+│   ├── farmer_surendhar.webp
+│   ├── farmer_bhaskar.png
 │   ├── farmer_ashok.webp
 │   └── ...           # Product pictures, gallery photos, and customer profiles
 │
