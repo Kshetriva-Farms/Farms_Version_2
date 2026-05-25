@@ -217,3 +217,33 @@ For queries, orders, or partner programs:
 - **Email:** [farm@kshetrivafarms.com](mailto:farm@kshetrivafarms.com) (Click the envelope icon in the website footer to copy this address instantly!)
 - **Address:** H no. 5-134, Maryala, Bommalaramaram, Telangana - 508116, India
 - **Instagram:** [@kshetrivafarms](https://www.instagram.com/kshetrivafarms?igsh=dGV5d3I2d2Rhc2t2)
+
+---
+
+## 📈 Recent Updates & Development Progress Log
+
+### 🗓️ May 25, 2026
+
+#### 1. 👥 Farmer Identity & Bio Alignment
+- **Identity Corrections:**
+  - Corrected the first farmer's identity from *E. Surendhar Reddy* to **`M. Surendhar Reddy`** across the entire website structure.
+  - Corrected the second farmer's identity from *E. Bhaskar Reddy* to **`N. Bhaskar Reddy`**.
+- **Bilingual Consistency:**
+  - Updated all associated keys inside the language translation dictionary in `script.js` for both **English** (`M. Surendhar Reddy` / `N. Bhaskar Reddy`) and **Telugu** (`ఎమ్. సురేందర్ రెడ్డి` / `ఎన్. భాస్కర్ రెడ్డి`). This ensures translation parity when users toggle language preferences.
+
+#### 2. 📸 High-Quality Portrait Crop & Integration
+- **Asset Sourcing:**
+  - Replaced the placeholder image (`farmer_ramesh.webp`) with a new, high-quality, professional portrait provided by the team.
+- **Image Standardization Process:**
+  - Standardized the new portrait to a clean **1:1 square crop** (at `1000 x 1000 px`) to eliminate borders and preserve composition.
+  - Resized using the Lanczos interpolation filter to exactly **`1024 x 1024 px`** to match the grid styling of all other farmer profiles.
+  - Saved as a compressed **WebP** asset (`images/farmer_surendhar.webp`) for quick loading and responsive rendering.
+- **HTML Binding:**
+  - Wired `index.html`'s card component to render the updated image asset.
+
+#### 3. 🖥️ Local Verification Server
+- Booted a local background HTTP development server at `http://localhost:8000` inside the `Farms_Version_2` directory to test responsive rendering, asset paths, and language-switching toggles locally.
+
+#### 4. 🚀 Code Synchronization & Deployment
+- Fetched and cleanly rebased all remote updates from the `main` branch to avoid branch divergence or fast-forward blockages.
+- Committed and pushed all optimized assets and source edits to the remote GitHub repository at `https://github.com/Kshetriva-Farms/Farms_Version_2.git`, successfully triggering the automatic hosting pipeline for live deployment.
