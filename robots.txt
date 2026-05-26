@@ -1,0 +1,6 @@
+# Direct crawlers to index content but secure administrative console
+User-agent: *
+Allow: /
+Disallow: /#admin
+
+Sitemap: https://www.kshetrivafarms.com/sitemap.xml

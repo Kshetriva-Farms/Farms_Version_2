@@ -648,7 +648,7 @@ function renderProducts(category = 'all') {
 
         card.innerHTML = `
             ${outOfStockBadge}
-            <img src="${product.image}" alt="${product.name}" class="product-img">
+            <img src="${product.image}" alt="${product.name}" class="product-img" width="250" height="200" loading="lazy">
             <div class="product-info">
                 <h4 class="product-title">${product.name}</h4>
                 <p class="product-price">${product.price} / ${product.unit}</p>
@@ -1125,7 +1125,7 @@ function renderAdminProducts() {
             : `<span class="admin-stock-indicator out-of-stock"><i class="fa-solid fa-circle-xmark"></i> Out of Stock</span>`;
 
         tr.innerHTML = `
-            <td><img src="${product.image}" alt="${product.name}" class="admin-table-img"></td>
+            <td><img src="${product.image}" alt="${product.name}" class="admin-table-img" width="50" height="50" loading="lazy"></td>
             <td>
                 <div class="admin-table-title">${product.name_en || product.name}</div>
                 <div class="admin-table-subtitle">${product.name_te || ''}</div>
