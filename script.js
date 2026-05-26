@@ -13,6 +13,14 @@ let db = null;
 let auth = null;
 let useFirebase = false;
 
+// GA4 Custom Telemetry Helper
+function trackGA4Event(eventName, eventParams = {}) {
+    if (typeof gtag === 'function') {
+        gtag('event', eventName, eventParams);
+        console.log(`📊 GA4 Event Tracked: "${eventName}"`, eventParams);
+    }
+}
+
 // Mock / Initial Products Data (Acts as default catalog and local fallback db)
 let products = [
     {
@@ -208,6 +216,10 @@ const translations = {
         confirmModalDesc: "Are you sure you want to clear all products from your basket?",
         confirmModalCancel: "Cancel",
         confirmModalAccept: "Clear All",
+        recoveryTitle: "Resume Your Basket?",
+        recoveryDesc: "You have items in your draft basket from your last visit.",
+        recoveryBtnClear: "Clear",
+        recoveryBtnResume: "Resume Basket",
 
         spinachName: "Spinach (Palak)",
         carrotsName: "Carrots",
@@ -309,6 +321,10 @@ const translations = {
         confirmModalDesc: "మీ బాస్కెట్ నుండి అన్ని ఉత్పత్తులను తొలగించాలనుకుంటున్నారా?",
         confirmModalCancel: "రద్దు చేయి",
         confirmModalAccept: "అన్నీ తీసివేయి",
+        recoveryTitle: "మీ బాస్కెట్‌ను పునరుద్ధరించాలా?",
+        recoveryDesc: "మీ చివరి సందర్శన నుండి కొన్ని ఉత్పత్తులు బాస్కెట్‌లో ఉన్నాయి.",
+        recoveryBtnClear: "తొలగించు",
+        recoveryBtnResume: "పునరుద్ధరించు",
 
         spinachName: "పాలకూర (పాలక్)",
         carrotsName: "క్యారెట్లు",
@@ -544,6 +560,16 @@ function applyLanguage() {
     if (toastNotification) {
         toastNotification.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${dict.emailCopied}`;
     }
+
+    // Cart Recovery Translation Binds
+    const recTitleEl = document.getElementById('recoveryTitle');
+    if (recTitleEl) recTitleEl.textContent = dict.recoveryTitle;
+    const recDescEl = document.getElementById('recoveryDesc');
+    if (recDescEl) recDescEl.textContent = dict.recoveryDesc;
+    const recClearBtn = document.getElementById('recoveryClearBtn');
+    if (recClearBtn) recClearBtn.textContent = dict.recoveryBtnClear;
+    const recResumeBtn = document.getElementById('recoveryResumeBtn');
+    if (recResumeBtn) recResumeBtn.textContent = dict.recoveryBtnResume;
 }
 
 function getTranslatedProduct(product) {
@@ -592,12 +618,19 @@ const whatsappOrderBtn = document.getElementById('whatsappOrderBtn');
 const cartFloatBtn = document.getElementById('cartFloatBtn');
 const cartBadgeFloat = document.getElementById('cartBadgeFloat');
 
-// Load Cart from LocalStorage
+// Load Cart from LocalStorage with draft recovery prompt
 function loadCart() {
     const stored = localStorage.getItem('kshetriva_cart');
     if (stored) {
         try {
-            cart = JSON.parse(stored);
+            const parsed = JSON.parse(stored);
+            const totalItems = Object.values(parsed).reduce((sum, q) => sum + q, 0);
+            if (totalItems > 0) {
+                // Save as draft for recovery popup
+                localStorage.setItem('kshetriva_cart_draft', stored);
+                // Keep active cart empty until they resume
+                cart = {};
+            }
         } catch (e) {
             cart = {};
         }
@@ -675,6 +708,13 @@ function updateQty(btn, change, productId) {
 
 // Add Product to Cart from Card Selection
 function addProductToCart(productId) {
+    // Dismiss and clear any recovery drafts on new additions
+    const toast = document.getElementById('cartRecoveryToast');
+    if (toast && toast.classList.contains('show')) {
+        toast.classList.remove('show');
+        localStorage.removeItem('kshetriva_cart_draft');
+    }
+
     const qtySpan = document.getElementById(`qty-${productId}`);
     if (!qtySpan) return;
 
@@ -889,6 +929,11 @@ function sendCartWhatsAppOrder() {
     message += isTe ? `దయచేసి నా ఆర్డర్‌ను ధృవీకరించండి మరియు డెలివరీ వివరాలను తెలపండి.\n` : `Please confirm my order and let me know delivery details.\n`;
     message += isTe ? `_డెలివరీ చిరునామా వివరాలు ఇక్కడ షేర్ చేయబడతాయి._` : `_Delivery Address details will be shared._`;
 
+    trackGA4Event('whatsapp_order_checkout', {
+        value: totalSum,
+        currency: 'INR',
+        items_count: cartKeys.length
+    });
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/918374276995?text=${encoded}`, '_blank');
 }
@@ -922,6 +967,10 @@ filterBtns.forEach(btn => {
         btn.classList.add('active');
 
         const filter = btn.getAttribute('data-filter');
+        trackGA4Event('category_filter_applied', {
+            category: filter,
+            language: currentLang
+        });
         renderProducts(filter);
     });
 });
@@ -1411,6 +1460,47 @@ updateCartUI();
 renderProducts();
 checkHashRoute();
 
+// Initialize Cart Recovery Toast event bindings
+function initCartRecovery() {
+    const draft = localStorage.getItem('kshetriva_cart_draft');
+    const toast = document.getElementById('cartRecoveryToast');
+    const resumeBtn = document.getElementById('recoveryResumeBtn');
+    const clearBtn = document.getElementById('recoveryClearBtn');
+
+    if (draft && toast) {
+        // Show the toast visual overlay after a 1.5s delay to let the page settle beautifully
+        setTimeout(() => {
+            toast.classList.add('show');
+            trackGA4Event('cart_recovery_prompt_displayed');
+        }, 1500);
+
+        if (resumeBtn) {
+            resumeBtn.addEventListener('click', () => {
+                try {
+                    cart = JSON.parse(draft);
+                    saveCart();
+                    updateCartUI();
+                    renderProducts();
+                    localStorage.removeItem('kshetriva_cart_draft');
+                    toast.classList.remove('show');
+                    trackGA4Event('cart_recovered', { items_count: Object.keys(cart).length });
+                } catch (e) {
+                    console.error("Cart recovery failed:", e);
+                }
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                localStorage.removeItem('kshetriva_cart_draft');
+                localStorage.removeItem('kshetriva_cart');
+                toast.classList.remove('show');
+                trackGA4Event('cart_recovery_cleared');
+            });
+        }
+    }
+}
+
 // Force Hero Video to Autoplay overriding aggressive browser autoplay block policies
 document.addEventListener('DOMContentLoaded', () => {
     const heroVideo = document.querySelector('.hero-video');
@@ -1420,4 +1510,20 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("Browser autoplay restrictions prevented video playback. Retrying...", err);
         });
     }
+
+    // Boot PWA cart recovery logic
+    initCartRecovery();
+
+    // Farmer spotlight analytics tracking
+    const farmerCards = document.querySelectorAll('.farmer-card');
+    farmerCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const nameEl = card.querySelector('h4');
+            const farmerName = nameEl ? nameEl.textContent : 'Unknown Farmer';
+            trackGA4Event('farmer_bio_expanded', {
+                farmer_name: farmerName,
+                language: currentLang
+            });
+        });
+    });
 });

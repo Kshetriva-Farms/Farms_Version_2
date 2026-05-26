@@ -63,6 +63,8 @@
     <!-- Favicon and Logo configuration standard links -->
     <link rel="icon" type="image/png" href="images/favicon.png">
     <link rel="apple-touch-icon" href="images/favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2e7d32">
 
     <!-- Structured Data (JSON-LD LocalBusiness Schema) -->
     <script type="application/ld+json">
@@ -477,6 +479,21 @@
         <i class="fa-solid fa-check-circle"></i> Email copied to clipboard!
     </div>
 
+    <!-- Cart Recovery Notification Toast -->
+    <div class="cart-recovery-toast" id="cartRecoveryToast">
+        <div class="cart-recovery-content">
+            <div class="cart-recovery-icon"><i class="fa-solid fa-shopping-basket"></i></div>
+            <div class="cart-recovery-text">
+                <h4 id="recoveryTitle">Resume Your Basket?</h4>
+                <p id="recoveryDesc">You have items in your draft basket from your last visit.</p>
+            </div>
+        </div>
+        <div class="cart-recovery-buttons">
+            <button class="btn btn-recovery-clear" id="recoveryClearBtn">Clear</button>
+            <button class="btn btn-recovery-resume" id="recoveryResumeBtn">Resume Basket</button>
+        </div>
+    </div>
+
     <!-- Admin Login Modal Overlay -->
     <div class="admin-login-modal" id="adminLoginModal">
         <div class="admin-login-content">
@@ -655,6 +672,17 @@
 
     <!-- Custom Script -->
     <script src="script.js?v=1.5"></script>
+
+    <!-- Register Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('🌾 Service Worker registered successfully:', reg.scope))
+                    .catch((err) => console.warn('🌾 Service Worker registration failed:', err));
+            });
+        }
+    </script>
 </body>
 
 </html>
