@@ -268,8 +268,10 @@ For queries, orders, or partner programs:
 - **Below-the-fold Lazy Loading**: Set up native `loading="lazy"` tags on all images below-the-fold, reducing initial bandwidth payload sizes and accelerating speed indexes.
 
 #### 5. 📱 Progressive Web App (PWA) Installability & Offline Caching
-- **manifest.json**: Created a web app manifest defining name, start URL, theme forest colors (`#2e7d32`), icon shapes, and standalone layout presets to make the storefront installable as a mobile application.
-- **sw.js**: Built a pre-cache Service Worker managing resources offline. The app loads dynamically in 0ms directly from cache on repeat visits, completely eliminating unnecessary Vercel network queries.
+- **manifest.json**: Configured the standard web manifest with short names, theme colors (`#2e7d32`), and full orientation presets. Standardized the launch icons mapping standard scopes (`"purpose": "any"`) and adaptive Android icons (`"purpose": "maskable"`).
+- **sw.js**: Built a robust pre-cache Service Worker caching static structures (HTML, CSS, JS, and high-res WebP images), yielding instant 0ms loads and complete offline fallback support.
+- **High-Resolution Icon Pipelines (Android Fix)**: Converted the master square logo `images/logo.webp` (2048x2048) into Lanczos-filtered high-resolution assets **`images/logo_pwa_192.png`** and **`images/logo_pwa_512.png`** to resolve a subtle gotcha where Android fell back to browser default shortcuts due to the physical `32x32` size of favicon.png.
+- **Retina iOS Integration (iOS Safari Fix)**: Re-wired the `<link rel="apple-touch-icon">` tag inside `index.html` to point to the high-resolution `images/logo_pwa_192.png` instead of the small favicon, guaranteeing crisp Retina displays for iOS Home Screen app launcher additions.
 
 #### 6. 📊 Google Analytics 4 Custom Events Telemetry
 - Wired custom analytic clicks to GA4: tracks WhatsApp direct checkout order values, category filter selections, and farmer spotlight expansions.
