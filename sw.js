@@ -8,6 +8,8 @@ const ASSETS_TO_CACHE = [
   './sitemap.xml',
   './manifest.json',
   './images/favicon.png',
+  './images/logo_pwa_192.png',
+  './images/logo_pwa_512.png',
   './images/logo_nav.webp',
   './images/about_farm_wide.png',
   './images/farmer_surendhar.webp',
