@@ -267,5 +267,15 @@ For queries, orders, or partner programs:
 - **Preconnect Handshakes**: Established preconnect link attributes targeting external font, icon, and analytics hostnames to resolve TCP and SSL connection handshakes early, saving up to 200ms on first render.
 - **Below-the-fold Lazy Loading**: Set up native `loading="lazy"` tags on all images below-the-fold, reducing initial bandwidth payload sizes and accelerating speed indexes.
 
-#### 5. 🚀 Deployment and Remote Sync
+#### 5. 📱 Progressive Web App (PWA) Installability & Offline Caching
+- **manifest.json**: Created a web app manifest defining name, start URL, theme forest colors (`#2e7d32`), icon shapes, and standalone layout presets to make the storefront installable as a mobile application.
+- **sw.js**: Built a pre-cache Service Worker managing resources offline. The app loads dynamically in 0ms directly from cache on repeat visits, completely eliminating unnecessary Vercel network queries.
+
+#### 6. 📊 Google Analytics 4 Custom Events Telemetry
+- Wired custom analytic clicks to GA4: tracks WhatsApp direct checkout order values, category filter selections, and farmer spotlight expansions.
+
+#### 7. 🛒 Local Cart Recovery Engine
+- Built a client-side localStorage recovery script. If a buyer builds a cart and exits, the browser caches the draft. Upon return, the site triggers a premium slide-up bilingual (EN/TE) recovery banner to resume checkout.
+
+#### 8. 🚀 Deployment and Remote Sync
 - Successfully verified all implementations locally and pushed updates directly to the remote main repository at `https://github.com/Kshetriva-Farms/Farms_Version_2.git`.
